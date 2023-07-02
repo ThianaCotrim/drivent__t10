@@ -34,19 +34,24 @@ export async function getAddressFromCEP(req: AuthenticatedRequest, res: Response
     const cep = req.query.cep as string;
 
     if (!cep) {
-      return res.status(httpStatus.BAD_REQUEST).json({ message: 'CEP não fornecido'})
+      return res.status(httpStatus.BAD_REQUEST).send('CEP não fornecido');
     }
 
-    const cepRegex = /^[0-9]{8}$/;
-    if (!cepRegex.test(cep)) {
-      return res.status(httpStatus.BAD_REQUEST).json({ message: 'CEP inválido' });
+    try {
+      const address = await enrollmentsService.getAddressFromCEP(cep);
+      res.status(httpStatus.OK).send(address);
+    } catch (error) {
+      if (error.message === 'CEP inválido') {
+        return res.status(httpStatus.BAD_REQUEST).send('CEP inválido');
+      }
+
+      if (error.name === 'NotFoundError') {
+        return res.send(httpStatus.NO_CONTENT);
+      }
+
+      res.sendStatus(httpStatus.INTERNAL_SERVER_ERROR);
     }
-    const address = await enrollmentsService.getAddressFromCEP(cep);
-    res.status(httpStatus.OK).send(address);
   } catch (error) {
-    if (error.name === 'NotFoundError') {
-      return res.send(httpStatus.NO_CONTENT);
-    }
     res.sendStatus(httpStatus.INTERNAL_SERVER_ERROR);
   }
 }

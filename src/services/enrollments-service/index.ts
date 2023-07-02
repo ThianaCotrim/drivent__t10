@@ -10,6 +10,12 @@ async function getAddressFromCEP(cep: string) {
   if (!cep) {
     throw new Error ('CEP não fornecido');
   }
+
+  const cepRegex = /^[0-9]{8}$/;
+  if (!cepRegex.test(cep)) {
+    throw new Error('CEP inválido');
+  }
+  
   // FIXME: está com CEP fixo!
   const result = await request.get(`${process.env.VIA_CEP_API}/${cep}/json/`);
 
