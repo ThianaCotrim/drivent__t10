@@ -9,10 +9,6 @@ import httpStatus from 'http-status';
 // TODO - Receber o CEP por parâmetro nesta função.
 async function getAddressFromCEP(cep: string) {
 
-  if (!cep) {
-    throw new Error ('CEP não fornecido');
-  }
-
   // FIXME: está com CEP fixo!
   const result = await request.get(`${process.env.VIA_CEP_API}/${cep}/json/`);
 
