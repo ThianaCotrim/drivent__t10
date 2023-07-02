@@ -4,23 +4,20 @@ import { invalidDataError, notFoundError } from '@/errors';
 import addressRepository, { CreateAddressParams } from '@/repositories/address-repository';
 import enrollmentRepository, { CreateEnrollmentParams } from '@/repositories/enrollment-repository';
 import { exclude } from '@/utils/prisma-utils';
+import httpStatus from 'http-status';
 
 // TODO - Receber o CEP por parâmetro nesta função.
 async function getAddressFromCEP(cep: string) {
-  if (!cep) {
-    throw new Error ('CEP não fornecido');
-  }
-
-  const cepRegex = /^[0-9]{8}$/;
-  if (!cepRegex.test(cep)) {
-    throw new Error('CEP inválido');
-  }
 
   // FIXME: está com CEP fixo!
   const result = await request.get(`${process.env.VIA_CEP_API}/${cep}/json/`);
 
-  if (!result.data || result.data.erro) {
-    throw new Error('CEP não encontrado');
+  if (result.status === httpStatus.BAD_REQUEST || result.data.erro === true) {
+    throw invalidDataError(['Cep invalido']);
+  }
+
+  if (!result.data) {
+    throw notFoundError();
   }
 
   // FIXME: não estamos interessados em todos os campos
@@ -57,6 +54,7 @@ async function createOrUpdateEnrollmentWithAddress(params: CreateOrUpdateEnrollm
   const address = getAddressForUpsert(params.address);
 
   // TODO - Verificar se o CEP é válido antes de associar ao enrollment.
+  await getAddressFromCEP(address.cep);
 
   const newEnrollment = await enrollmentRepository.upsert(params.userId, enrollment, exclude(enrollment, 'userId'));
 
