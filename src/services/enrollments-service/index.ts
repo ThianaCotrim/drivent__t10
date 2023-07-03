@@ -13,6 +13,10 @@ async function getAddressFromCEP(cep: string) {
   // FIXME: está com CEP fixo!
   const result = await request.get(`${process.env.VIA_CEP_API}/${cep}/json/`);
 
+  if (result.status !== 200 || result.data.erro) {
+    throw notFoundError();
+  } 
+  
   if (!result.data) {
     throw notFoundError();
   }
